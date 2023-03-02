@@ -8,14 +8,14 @@ export const routes: RouteRecordRaw[] = [
     path: '/zh/',
     name: 'zh',
     alias: '/en/',
-    component: () => import('@/views/TheHome.vue'),
-  },
-  {
-    path: '/zh/summit/',
-    name: 'summit',
-    alias: '/en/summit/',
     component: () => import('@/views/summit/TheSummit.vue'),
   },
+  // {
+  //   path: '/zh/summit/',
+  //   name: 'summit',
+  //   alias: '/en/summit/',
+  //   component: () => import('@/views/summit/TheSummit.vue'),
+  // },
 ];
 
 export const router = createRouter({
