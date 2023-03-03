@@ -9,7 +9,7 @@ import SummitSchedule from './components/SummitSchedule.vue';
 
 <style scoped lang="scss">
 .demo {
-  padding-top: var(--o-gap-7);
+  padding: var(--o-gap-7) 0;
   display: flex;
   flex-direction: column;
   gap: var(--o-gap-5) 0;

@@ -1,21 +1,29 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { ref, reactive } from 'vue';
 import IconTime from '~icons/app/icon-time.svg';
 
-const scheduleData: any = {
-  title: '3月24日 Summit 2022',
+// const value1 = ref<[Date, Date]>([
+//   new Date(2016, 9, 10, 8, 40),
+//   new Date(2016, 9, 10, 9, 40),
+// ]);
+const value1 = ref(['15:55', '15:59']);
+
+const isEditor = ref(true);
+
+const scheduleData: any = reactive({
+  title: '输入标题',
   content: [
     {
       lable: '上午：主论坛',
-      id: 'main',
+      id: 0,
       content: [
         {
-          time: ['9:30', '12:00'],
-          desc: '工信部领导致辞',
+          time: [null, null],
+          desc: 'XXX领导致辞',
           person: [
             {
-              name: '王江平',
-              post: ['工业和信息化部党组成员、副部长'],
+              name: '姓名',
+              post: ['XXX成员'],
             },
           ],
         },
@@ -23,9 +31,7 @@ const scheduleData: any = {
     },
     {
       lable: '下午：分论坛',
-      id: 'other',
-      duration: ['14:00', '17:00'],
-      time: '28',
+      id: 1,
       content: [
         {
           id: 0,
@@ -117,7 +123,7 @@ const scheduleData: any = {
       ],
     },
   ],
-};
+});
 // 控制分论坛的详情弹窗显示
 const indexShow: any = ref(-1);
 const idShow: any = ref(-1);
@@ -131,16 +137,81 @@ const otherTabType = ref(0);
 function handleInputBlur() {
   console.log('失焦事件');
 }
+function handleClose() {
+  console.log(value1);
+}
+function addSubtitle() {
+  scheduleData.content.push({
+    lable: '上午：主论坛',
+    id: scheduleData.content.length,
+    content: [
+      {
+        time: [null, null],
+        desc: 'XXX领导致辞',
+        person: [
+          {
+            name: '姓名',
+            post: ['XXX成员'],
+          },
+        ],
+      },
+    ],
+  });
+}
+function delSubtitle(index: number) {
+  scheduleData.content.splice(index, 1);
+}
+function addContent() {
+  scheduleData.content[tabType.value].content.push({
+    time: [null, null],
+    desc: 'XXX领导致辞',
+    person: [
+      {
+        name: '姓名',
+        post: ['XXX成员'],
+      },
+    ],
+  });
+}
+function delContent(index: number) {
+  scheduleData.content[tabType.value].content.splice(index, 1);
+}
+
+function addSubtitle2() {
+  scheduleData.content[tabType.value].content.push({
+    id: 0,
+    name: '麒麟软件',
+    content: [
+      {
+        time: ['14:00', '14:10'],
+        desc: '欧拉社区领导致辞',
+        person: [
+          {
+            name: '冯冠霖',
+            post: ['开放原子开源基金会秘书长'],
+          },
+        ],
+        detail: ['EEEEEE'],
+      },
+    ],
+  });
+}
 </script>
 
 <template>
+  <el-button @click="isEditor = !isEditor">编辑</el-button>
   <div class="schedule">
     <h4 class="meeting-title">
-      <input v-model="scheduleData.title" type="text" @blur="handleInputBlur" />
+      <input
+        v-model="scheduleData.title"
+        :readonly="!isEditor"
+        type="text"
+        @blur="handleInputBlur"
+      />
     </h4>
     <el-tabs v-model="tabType" class="schedule-tabs">
       <el-tab-pane
-        v-for="itemList in scheduleData.content"
+        v-for="(itemList, index) in scheduleData.content"
         :key="itemList.id"
         :name="itemList.id"
       >
@@ -148,13 +219,20 @@ function handleInputBlur() {
           <div class="time-tabs">
             <input
               v-model="itemList.lable"
+              :readonly="!isEditor"
               type="text"
               @blur="handleInputBlur"
             />
+            <span v-if="isEditor" title="删除" @click="delSubtitle(index)"
+              >X</span
+            >
           </div>
         </template>
       </el-tab-pane>
     </el-tabs>
+    <el-button v-if="isEditor" @click="addSubtitle">增加副标题</el-button>
+    <el-button v-if="isEditor" @click="addSubtitle2">增加三级标题</el-button>
+
     <el-container :level-index="1">
       <template
         v-for="scheduleItem in scheduleData.content"
@@ -177,14 +255,25 @@ function handleInputBlur() {
             >
               <!-- 该lable下只存在一个论坛的时候 -->
               <template v-if="!subItem.content">
-                <span class="time"
-                  ><IconTime />{{
+                <span class="time">
+                  <el-time-picker
+                    v-model="value1"
+                    is-range
+                    value-format="HH:mm"
+                    :readonly="!isEditor"
+                    format="HH:mm"
+                    start-placeholder="Start"
+                    end-placeholder="End"
+                    @change="handleClose"
+                  />
+                  <!-- <IconTime />{{
                     subItem.time[0] + '-' + subItem.time[1]
-                  }}</span
-                >
+                  }} -->
+                </span>
                 <span class="desc">
                   <input
                     v-model="subItem.desc"
+                    :readonly="!isEditor"
                     type="text"
                     @blur="handleInputBlur"
                 /></span>
@@ -196,6 +285,7 @@ function handleInputBlur() {
                     <span class="name">
                       <input
                         v-model="personItem.name"
+                        :readonly="!isEditor"
                         type="text"
                         @blur="handleInputBlur"
                     /></span>
@@ -207,6 +297,7 @@ function handleInputBlur() {
                       >
                         <input
                           v-model="personItem.post[postIndex]"
+                          :readonly="!isEditor"
                           type="text"
                           @blur="handleInputBlur"
                         />
@@ -214,10 +305,19 @@ function handleInputBlur() {
                     </template>
                   </div>
                 </div>
+                <span
+                  v-if="isEditor"
+                  class="del-content"
+                  @click="delContent(subIndex)"
+                  >X</span
+                >
               </template>
               <!-- 该lable下不只存在一个论坛的时候 -->
             </div>
           </div>
+          <el-button v-if="isEditor" class="add-content" @click="addContent">
+            增加日程
+          </el-button>
         </div>
         <div
           v-show="
@@ -235,6 +335,7 @@ function handleInputBlur() {
               <h4 v-if="itemList.title" class="other-title">
                 <input
                   v-model="itemList.title"
+                  :readonly="!isEditor"
                   type="text"
                   @blur="handleInputBlur"
                 />
@@ -249,8 +350,17 @@ function handleInputBlur() {
                       indexShow === subIndex && idShow === itemList.id,
                   }"
                 >
-                  <span class="time"
-                    ><IconTime />{{
+                  <span class="time">
+                    <!-- <el-time-picker
+                      v-model="value1"
+                      value-format="HH:mm"
+                      is-range
+                      format="HH:mm"
+                      start-placeholder="Start time"
+                      end-placeholder="End time"
+                    /> -->
+
+                    <IconTime />{{
                       subItem.time[0] + '-' + subItem.time[1]
                     }}</span
                   >
@@ -261,6 +371,7 @@ function handleInputBlur() {
                   >
                     <input
                       v-model="subItem.desc"
+                      :readonly="!isEditor"
                       type="text"
                       @blur="handleInputBlur"
                   /></span>
@@ -278,6 +389,7 @@ function handleInputBlur() {
                         >
                           <input
                             v-model="personItem.post[postIndex]"
+                            :readonly="!isEditor"
                             type="text"
                             @blur="handleInputBlur"
                           />
@@ -344,6 +456,18 @@ input {
   font-size: inherit;
   border: none;
   max-width: 100%;
+}
+input[readonly] {
+  cursor: auto;
+  text-align: center;
+  &:focus-visible {
+    border: none;
+    box-shadow: none;
+    outline: none;
+  }
+}
+.el-date-editor.el-input__wrapper {
+  background-color: transparent;
 }
 .schedule {
   margin-top: 20px;
@@ -545,6 +669,13 @@ input {
           display: block;
         }
       }
+    }
+    .del-content {
+      cursor: pointer;
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      right: 12px;
     }
     .desc {
       font-size: 18px;
