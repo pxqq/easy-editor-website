@@ -18,12 +18,19 @@ const scheduleData: any = reactive({
       id: 0,
       content: [
         {
-          time: [null, null],
-          desc: 'XXX领导致辞',
-          person: [
+          id: 0,
+          name: '',
+          content: [
             {
-              name: '姓名',
-              post: ['XXX成员'],
+              time: [null, null],
+              desc: 'XXX领导致辞',
+              person: [
+                {
+                  name: '姓名',
+                  post: ['XXX成员'],
+                },
+              ],
+              detail: [''],
             },
           ],
         },
@@ -134,6 +141,9 @@ function changeIndexShow(id: number, index: number) {
 // 控制主论坛及各个分论坛的显示
 const tabType = ref(scheduleData.content[0].id);
 const otherTabType = ref(0);
+function tabClick() {
+  otherTabType.value = 0;
+}
 function handleInputBlur() {
   console.log('失焦事件');
 }
@@ -209,7 +219,7 @@ function addSubtitle2() {
         @blur="handleInputBlur"
       />
     </h4>
-    <el-tabs v-model="tabType" class="schedule-tabs">
+    <el-tabs v-model="tabType" @tab-click="tabClick" class="schedule-tabs">
       <el-tab-pane
         v-for="(itemList, index) in scheduleData.content"
         :key="itemList.id"
@@ -240,21 +250,56 @@ function addSubtitle2() {
       >
         <div
           v-show="
-            tabType === scheduleItem.id && !scheduleItem.content[0].content
+            tabType === scheduleItem.id && scheduleItem.content[0].content
           "
-          class="schedule-item"
+          class="schedule-item other"
         >
-          <div class="content-list">
-            <div
-              v-for="(subItem, subIndex) in scheduleItem.content"
-              :key="subItem.time"
-              class="content-item"
-              :class="{
-                'show-detail': indexShow === subIndex,
-              }"
+          <el-tabs
+            v-if="scheduleItem.content[1]"
+            v-model="otherTabType"
+            class="other-tabs"
+          >
+            <el-tab-pane
+              v-for="itemList in scheduleItem.content"
+              :key="itemList.id"
+              :name="itemList.id"
             >
-              <!-- 该lable下只存在一个论坛的时候 -->
-              <template v-if="!subItem.content">
+              <template #label>
+                <div class="time-tabs">
+                  <input
+                    v-model="itemList.name"
+                    :readonly="!isEditor"
+                    type="text"
+                    @blur="handleInputBlur"
+                  />
+                </div>
+              </template>
+            </el-tab-pane>
+          </el-tabs>
+          <div
+            v-for="itemList in scheduleItem.content"
+            v-show="tabType === scheduleItem.id && otherTabType === itemList.id"
+            :key="itemList.id"
+            class="content"
+          >
+            <h4 v-if="itemList.title" class="other-title">
+              <input
+                v-model="itemList.title"
+                :readonly="!isEditor"
+                type="text"
+                @blur="handleInputBlur"
+              />
+            </h4>
+            <div class="content-list">
+              <div
+                v-for="(subItem, subIndex) in itemList.content"
+                :key="subItem.time"
+                class="content-item"
+                :class="{
+                  'show-detail':
+                    indexShow === subIndex && idShow === itemList.id,
+                }"
+              >
                 <span class="time">
                   <el-time-picker
                     v-model="value1"
@@ -267,28 +312,26 @@ function addSubtitle2() {
                     @change="handleClose"
                   />
                   <!-- <IconTime />{{
-                    subItem.time[0] + '-' + subItem.time[1]
-                  }} -->
+                      subItem.time[0] + '-' + subItem.time[1]
+                    }} -->
                 </span>
-                <span class="desc">
+                <span
+                  class="desc"
+                  :class="{ 'exit-detail': subItem.detail[0] }"
+                  @click="changeIndexShow(itemList.id, subIndex as any)"
+                >
                   <input
                     v-model="subItem.desc"
                     :readonly="!isEditor"
                     type="text"
                     @blur="handleInputBlur"
                 /></span>
-                <div v-if="subItem.person" class="name-box">
+                <div v-if="subItem.person[0]" class="name-box">
                   <div
                     v-for="personItem in subItem.person"
                     :key="personItem.name"
                   >
-                    <span class="name">
-                      <input
-                        v-model="personItem.name"
-                        :readonly="!isEditor"
-                        type="text"
-                        @blur="handleInputBlur"
-                    /></span>
+                    <span class="name">{{ personItem.name }} </span>
                     <template v-if="personItem.post[0]">
                       <span
                         v-for="(postItem, postIndex) in personItem.post"
@@ -305,144 +348,58 @@ function addSubtitle2() {
                     </template>
                   </div>
                 </div>
+                <div v-if="subItem.detail[0]" class="detail">
+                  <p>
+                    <span>议题名称：</span><span> {{ subItem.desc }}</span>
+                  </p>
+                  <p v-if="subItem.detail[0]">
+                    <span>议题简介：</span
+                    ><span
+                      ><span
+                        v-for="itemDetail in subItem.detail"
+                        :key="itemDetail"
+                        class="detail-text"
+                        >{{ itemDetail }}</span
+                      ></span
+                    >
+                  </p>
+                  <p v-if="subItem.person[0]">
+                    <span>发言人：</span>
+                    <span
+                      v-for="personItem in subItem.person"
+                      :key="personItem.name"
+                      >{{ personItem.name }}
+                      <template v-if="personItem.post[0]">
+                        <span>(</span>
+                        <span
+                          v-for="postItem in personItem.post"
+                          :key="postItem"
+                          >{{ postItem }}</span
+                        >
+                        <span>)</span>
+                      </template>
+                    </span>
+                  </p>
+                </div>
+                <div
+                  v-show="
+                    indexShow !== -1 && subItem.detail && idShow === itemList.id
+                  "
+                  class="mask"
+                  @click="changeIndexShow(-1, -1)"
+                ></div>
                 <span
                   v-if="isEditor"
                   class="del-content"
                   @click="delContent(subIndex)"
                   >X</span
                 >
-              </template>
-              <!-- 该lable下不只存在一个论坛的时候 -->
-            </div>
-          </div>
-          <el-button v-if="isEditor" class="add-content" @click="addContent">
-            增加日程
-          </el-button>
-        </div>
-        <div
-          v-show="
-            tabType === scheduleItem.id && scheduleItem.content[0].content
-          "
-          class="schedule-item other"
-        >
-          <el-tabs v-model="otherTabType" class="other-tabs">
-            <el-tab-pane
-              v-for="itemList in scheduleItem.content"
-              :key="itemList.id"
-              :label="itemList.name"
-              :name="itemList.id"
-            >
-              <h4 v-if="itemList.title" class="other-title">
-                <input
-                  v-model="itemList.title"
-                  :readonly="!isEditor"
-                  type="text"
-                  @blur="handleInputBlur"
-                />
-              </h4>
-              <div class="content-list">
-                <div
-                  v-for="(subItem, subIndex) in itemList.content"
-                  :key="subItem.time"
-                  class="content-item"
-                  :class="{
-                    'show-detail':
-                      indexShow === subIndex && idShow === itemList.id,
-                  }"
-                >
-                  <span class="time">
-                    <!-- <el-time-picker
-                      v-model="value1"
-                      value-format="HH:mm"
-                      is-range
-                      format="HH:mm"
-                      start-placeholder="Start time"
-                      end-placeholder="End time"
-                    /> -->
-
-                    <IconTime />{{
-                      subItem.time[0] + '-' + subItem.time[1]
-                    }}</span
-                  >
-                  <span
-                    class="desc"
-                    :class="{ 'exit-detail': subItem.detail[0] }"
-                    @click="changeIndexShow(itemList.id, subIndex as any)"
-                  >
-                    <input
-                      v-model="subItem.desc"
-                      :readonly="!isEditor"
-                      type="text"
-                      @blur="handleInputBlur"
-                  /></span>
-                  <div v-if="subItem.person[0]" class="name-box">
-                    <div
-                      v-for="personItem in subItem.person"
-                      :key="personItem.name"
-                    >
-                      <span class="name">{{ personItem.name }} </span>
-                      <template v-if="personItem.post[0]">
-                        <span
-                          v-for="(postItem, postIndex) in personItem.post"
-                          :key="postItem"
-                          class="post"
-                        >
-                          <input
-                            v-model="personItem.post[postIndex]"
-                            :readonly="!isEditor"
-                            type="text"
-                            @blur="handleInputBlur"
-                          />
-                        </span>
-                      </template>
-                    </div>
-                  </div>
-                  <div v-if="subItem.detail[0]" class="detail">
-                    <p>
-                      <span>议题名称：</span><span> {{ subItem.desc }}</span>
-                    </p>
-                    <p v-if="subItem.detail[0]">
-                      <span>议题简介：</span
-                      ><span
-                        ><span
-                          v-for="itemDetail in subItem.detail"
-                          :key="itemDetail"
-                          class="detail-text"
-                          >{{ itemDetail }}</span
-                        ></span
-                      >
-                    </p>
-                    <p v-if="subItem.person[0]">
-                      <span>发言人：</span>
-                      <span
-                        v-for="personItem in subItem.person"
-                        :key="personItem.name"
-                        >{{ personItem.name }}
-                        <template v-if="personItem.post[0]">
-                          <span>(</span>
-                          <span
-                            v-for="postItem in personItem.post"
-                            :key="postItem"
-                            >{{ postItem }}</span
-                          >
-                          <span>)</span>
-                        </template>
-                      </span>
-                    </p>
-                  </div>
-                  <div
-                    v-show="
-                      indexShow !== -1 &&
-                      subItem.detail &&
-                      idShow === itemList.id
-                    "
-                    class="mask"
-                    @click="changeIndexShow(-1, -1)"
-                  ></div>
-                </div>
               </div>
-            </el-tab-pane>
-          </el-tabs>
+            </div>
+            <el-button v-if="isEditor" class="add-content" @click="addContent">
+              增加日程
+            </el-button>
+          </div>
         </div>
       </template>
     </el-container>
