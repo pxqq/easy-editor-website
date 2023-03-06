@@ -8,7 +8,7 @@ export const routes: RouteRecordRaw[] = [
     path: '/zh/',
     name: 'zh',
     alias: '/en/',
-    component: () => import('@/views/TheHome.vue'),
+    component: () => import('@/views/summit/TheSummit.vue'),
   },
   {
     path: '/zh/summit/',

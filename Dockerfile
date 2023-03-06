@@ -17,5 +17,5 @@ COPY ./deploy/nginx/nginx.conf /etc/nginx/nginx.conf
 
 ENV RUN_USER nginx
 ENV RUN_GROUP nginx
-EXPOSE 8080
+EXPOSE 80
 ENTRYPOINT ["nginx", "-g", "daemon off;"]
