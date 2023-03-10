@@ -273,11 +273,15 @@ onMounted(() => {
         @blur="handleInputBlur"
       />
     </h4>
-    <el-tabs v-model="tabType" class="schedule-tabs" @tab-click="tabClick">
+    <el-tabs
+      v-model.number="tabType"
+      class="schedule-tabs"
+      @tab-click="tabClick"
+    >
       <el-tab-pane
         v-for="(itemList, index) in scheduleData.content"
         :key="itemList.id"
-        :name="itemList.index"
+        :name="index"
       >
         <template #label>
           <div class="time-tabs">
@@ -308,13 +312,13 @@ onMounted(() => {
         >
           <el-tabs
             v-if="scheduleItem.content[1]"
-            v-model="otherTabType"
+            v-model.number="otherTabType"
             class="other-tabs"
           >
             <el-tab-pane
-              v-for="(itemList, index1) in scheduleItem.content"
+              v-for="(itemList, scheduleIndex) in scheduleItem.content"
               :key="itemList.id"
-              :name="itemList.index1"
+              :name="scheduleIndex"
             >
               <template #label>
                 <div class="time-tabs">
@@ -324,7 +328,9 @@ onMounted(() => {
                     type="text"
                     @blur="handleInputBlur"
                   />
-                  <span v-show="isEditor" @click="delSubtitle2(index1)">X</span>
+                  <span v-show="isEditor" @click="delSubtitle2(scheduleIndex)"
+                    >X</span
+                  >
                 </div>
               </template>
             </el-tab-pane>
