@@ -11,6 +11,7 @@ watch(
     locale.value = val;
   }
 );
+console.log(123)
 </script>
 
 <template>
